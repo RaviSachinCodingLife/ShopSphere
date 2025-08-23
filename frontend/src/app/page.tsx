@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { DASHBOARD } from "@/graphql/queries";
 import KpiCard from "@/components/KpiCard";
 import LineAreaChart from "@/components/LineAreaChart";
@@ -22,7 +22,7 @@ export default function Dashboard() {
       </div>
       <div>
         <div className="text-sm text-slate-500 mb-2">Revenue (last 30 days)</div>
-        <LineAreaChart data={trend} />
+        <LineAreaChart data={trend} xKey="date" dataKey="value" />
       </div>
     </div>
   );

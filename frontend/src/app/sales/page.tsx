@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { SALES } from "@/graphql/queries";
 import LineAreaChart from "@/components/LineAreaChart";
 
@@ -24,7 +24,7 @@ export default function Sales() {
                 </div>
             </div>
 
-            <LineAreaChart data={s.revenueTrend} />
+            <LineAreaChart data={s.revenueTrend} xKey="date" dataKey="value" />
 
             <div className="rounded-2xl bg-white p-5 shadow">
                 <div className="font-semibold mb-3">Top Products</div>

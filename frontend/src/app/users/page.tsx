@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react"
 import { USERS } from "@/graphql/queries";
 import KpiCard from "@/components/KpiCard";
 import LineAreaChart from "@/components/LineAreaChart";

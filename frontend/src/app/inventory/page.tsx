@@ -1,5 +1,5 @@
 "use client";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { INVENTORY } from "@/graphql/queries";
 import { useState } from "react";
 

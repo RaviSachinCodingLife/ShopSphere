@@ -1,5 +1,5 @@
 "use client";
-import { ApolloProvider } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
 import { apollo } from "@/graphql/client";
 import { StoreProvider } from "@/store";
 

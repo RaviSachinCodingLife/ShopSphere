@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "@apollo/client";
+import { useQuery, useMutation } from "@apollo/client/react";
 import { ORDERS, UPDATE_ORDER } from "@/graphql/queries";
 
 export default function Orders() {
