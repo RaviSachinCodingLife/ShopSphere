@@ -1,4 +1,3 @@
-// ESM resolvers with realistic mocks
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const customers = [
   "Ava",
@@ -25,6 +24,7 @@ function seedOrders(n = 200) {
     ).toISOString(),
   }));
 }
+
 const ORDERS = seedOrders();
 const PRODUCTS = Array.from({ length: 80 }).map((_, i) => ({
   id: `sku-${i + 1}`,
@@ -32,6 +32,7 @@ const PRODUCTS = Array.from({ length: 80 }).map((_, i) => ({
   name: `Product ${i + 1}`,
   stock: Math.floor(Math.random() * 200),
 }));
+
 function stockStatus(stock) {
   if (stock === 0) return "OUT_OF_STOCK";
   if (stock < 10) return "LOW";
@@ -140,3 +141,5 @@ export const resolvers = {
     },
   },
 };
+
+export default resolvers;
