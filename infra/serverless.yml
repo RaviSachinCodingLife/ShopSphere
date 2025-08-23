@@ -1,0 +1,21 @@
+service: shopsphere
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: ap-south-1
+  stage: dev
+  httpApi:
+    cors: true
+
+plugins:
+  - serverless-offline
+
+functions:
+  graphql:
+    handler: ../backend/handler.graphql
+    events:
+      - http:
+          path: graphql
+          method: any

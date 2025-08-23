@@ -1,0 +1,141 @@
+"""
+Basic point for charts
+"""
+type Point {
+  date: String!
+  value: Float!
+}
+
+"""
+Dashboard KPIs
+"""
+type DashboardKPIs {
+  totalSales: Float!
+  ordersInProgress: Int!
+  activeUsers: Int!
+}
+
+"""
+Sales analytics
+"""
+enum SalesGroupBy {
+  DAY
+  WEEK
+  MONTH
+}
+type SalesTopProduct {
+  id: ID!
+  name: String!
+  revenue: Float!
+  units: Int!
+}
+type SalesAnalytics {
+  range: String!
+  groupBy: SalesGroupBy!
+  revenueTrend: [Point!]!
+  topProducts: [SalesTopProduct!]!
+}
+
+"""
+Inventory
+"""
+enum StockStatus {
+  IN_STOCK
+  LOW
+  OUT_OF_STOCK
+}
+type InventoryItem {
+  id: ID!
+  sku: String!
+  name: String!
+  stock: Int!
+  status: StockStatus!
+}
+type InventoryPage {
+  items: [InventoryItem!]!
+  total: Int!
+  page: Int!
+  pageSize: Int!
+}
+
+"""
+Users / behavior
+"""
+type UserBehavior {
+  activeUsers: Int!
+  newUsers: Int!
+  returningUsers: Int!
+  avgSessionMins: Float!
+  funnel: [Point!]!
+}
+
+"""
+Orders
+"""
+enum OrderStatus {
+  PENDING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+type Order {
+  id: ID!
+  status: OrderStatus!
+  total: Float!
+  customer: String!
+  createdAt: String!
+}
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+}
+type OrderEdge {
+  node: Order!
+  cursor: String!
+}
+type OrdersConnection {
+  edges: [OrderEdge!]!
+  pageInfo: PageInfo!
+}
+
+type Query {
+  hello: String!
+
+  # Dashboard
+  dashboardKPIs: DashboardKPIs!
+
+  # Sales
+  salesAnalytics(
+    range: String! = "last_30"
+    groupBy: SalesGroupBy! = DAY
+    category: String
+    region: String
+  ): SalesAnalytics!
+
+  # Inventory
+  inventory(
+    page: Int! = 1
+    pageSize: Int! = 20
+    status: StockStatus
+  ): InventoryPage!
+
+  # Users
+  userBehavior(range: String! = "last_30"): UserBehavior!
+
+  # Orders
+  orders(
+    first: Int! = 20
+    after: String
+    status: OrderStatus
+  ): OrdersConnection!
+  order(id: ID!): Order
+}
+
+type Mutation {
+  updateOrderStatus(id: ID!, status: OrderStatus!): Order!
+  updatePreference(theme: String!, notifications: Boolean!): Boolean!
+}
+
+type Subscription {
+  orderUpdated: Order!
+}
