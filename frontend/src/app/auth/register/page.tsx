@@ -1,70 +1,118 @@
 "use client";
-import { useState } from "react";
-import { useMutation } from "@apollo/client/react";
-import { REGISTER } from "@/graphql/mutations";
-import { useRouter } from "next/navigation";
+
 import Link from "next/link";
+import {
+    Box,
+    Paper,
+    Typography,
+    TextField,
+    Button,
+    CircularProgress,
+    Alert,
+} from "@mui/material";
+import { useRegister } from "./useRegister";
 
 export default function RegisterPage() {
-    const router = useRouter();
-    const [username, setUsername] = useState("");
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-    const [register, { loading, error }] = useMutation(REGISTER);
-
-    const handleRegister = async (e: React.FormEvent) => {
-        e.preventDefault();
-        try {
-            const { data } = await register({
-                variables: { username, email, password },
-            });
-            if (data?.register) {
-                localStorage.setItem("token", data.register.token);
-                localStorage.setItem("user", JSON.stringify(data.register.user));
-                router.push("/sales");
-            }
-        } catch (err) {
-            console.error("Register failed:", err);
-        }
-    };
-
+    const { form, handleChange, handleRegister, loading, error, inputs } = useRegister();
 
     return (
-        <div style={{ maxWidth: 400, margin: "80px auto" }}>
-            <h1>Register</h1>
-            <form onSubmit={handleRegister}>
-                <input
-                    type="text"
-                    placeholder="Username"
-                    value={username}
-                    onChange={e => setUsername(e.target.value)}
-                    required
-                    style={{ display: "block", marginBottom: 10, width: "100%" }}
-                />
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    style={{ display: "block", marginBottom: 10, width: "100%" }}
-                />
-                <input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    style={{ display: "block", marginBottom: 10, width: "100%" }}
-                />
-                <button type="submit" disabled={loading}>
-                    {loading ? "Registering..." : "Register"}
-                </button>
-                {error && <p style={{ color: "red" }}>{error.message}</p>}
-            </form>
-            <p>
-                Already have an account? <Link href="/">Login</Link>
-            </p>
-        </div>
+        <Box
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+            minHeight="100vh"
+            bgcolor="background.default"
+            px={2}
+        >
+            <Paper
+                elevation={4}
+                sx={{
+                    p: 5,
+                    width: "100%",
+                    maxWidth: 420,
+                    borderRadius: 4,
+                    border: "1px solid #a9cef3ff",
+                    textAlign: "center",
+                }}
+            >
+                <Typography
+                    variant="h4"
+                    fontWeight={700}
+                    gutterBottom
+                    sx={{ color: "#1976d2" }}
+                >
+                    Create Account
+                </Typography>
+                <Typography variant="body2" sx={{ color: "text.secondary" }} mb={3}>
+                    Sign up to join{" "}
+                    <span style={{ fontWeight: 600, color: "#1976d2" }}>ShopSphere</span>
+                </Typography>
+
+                <form onSubmit={handleRegister}>
+                    {inputs.map((input) => (
+                        <TextField
+                            key={input.name}
+                            label={input.label}
+                            type={input.type}
+                            name={input.name}
+                            value={(form as any)[input.name]}
+                            onChange={handleChange}
+                            fullWidth
+                            margin="normal"
+                            required
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: 2,
+                                    "& fieldset": { borderColor: "#b0bec5" },
+                                    "&:hover fieldset": { borderColor: "#1976d2" },
+                                    "&.Mui-focused fieldset": {
+                                        borderColor: "#1976d2",
+                                        borderWidth: 2,
+                                    },
+                                },
+                            }}
+                        />
+                    ))}
+
+                    {error && (
+                        <Alert severity="error" sx={{ mt: 2, textAlign: "left" }}>
+                            {error.message}
+                        </Alert>
+                    )}
+
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        sx={{
+                            mt: 3,
+                            py: 1.5,
+                            borderRadius: 3,
+                            fontWeight: 600,
+                            textTransform: "none",
+                            backgroundColor: "#1976d2",
+                            "&:hover": { backgroundColor: "#1565c0" },
+                        }}
+                        disabled={loading}
+                    >
+                        {loading ? <CircularProgress size={24} color="inherit" /> : "Register"}
+                    </Button>
+                </form>
+
+                <Typography variant="body2" mt={3} sx={{ color: "text.secondary" }}>
+                    Already have an account?{" "}
+                    <Link
+                        href="/"
+                        style={{
+                            textDecoration: "none",
+                            fontWeight: 600,
+                            color: "#1976d2",
+                        }}
+                    >
+                        Login
+                    </Link>
+                </Typography>
+            </Paper>
+        </Box>
     );
 }

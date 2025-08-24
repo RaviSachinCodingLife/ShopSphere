@@ -1,22 +1,18 @@
 import "./globals.css";
+import { ReactNode } from "react";
 import Providers from "./providers";
-import Sidebar from "@/components/Sidebar";
-import Topbar from "@/components/Topbar";
+import AuthProvider from "./AuthProvider";
 
-export const metadata = { title: "ShopSphere — E-commerce Dashboard" };
+export const metadata = {
+  title: "ShopSphere — E-commerce Dashboard",
+};
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="bg-slate-50 antialiased">
+      <body className="bg-slate-50 antialiased min-h-screen">
         <Providers>
-          <div className="min-h-screen flex">
-            <Sidebar />
-            <div className="flex-1 flex flex-col">
-              <Topbar />
-              <div className="p-6">{children}</div>
-            </div>
-          </div>
+          <AuthProvider>{children}</AuthProvider>
         </Providers>
       </body>
     </html>

@@ -154,9 +154,11 @@ export const resolvers = {
         username,
         email,
         password: hashed,
-        role: "analytics", // ✅ default role
+        role: "analytics",
       };
       users.push(newUser);
+
+      console.log("Users array after register:", users, newUser);
 
       const token = jwt.sign(
         { userId: newUser.id, role: newUser.role },
@@ -179,6 +181,8 @@ export const resolvers = {
     login: async (_, { email, password }) => {
       const user = users.find((u) => u.email === email);
       if (!user) throw new Error("User not found");
+      console.log("Trying to login with:", email);
+      console.log("Available users:", users);
 
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) throw new Error("Invalid password");
@@ -201,11 +205,11 @@ export const resolvers = {
     },
 
     // ✅ Upgrade role
-     upgradeRole: (_, { userId, role }) => {
-      const user = users.find(u => u.id === userId);
+    upgradeRole: (_, { userId, role }) => {
+      const user = users.find((u) => u.id === userId);
       if (!user) throw new Error("User not found");
 
-      user.role = role; 
+      user.role = role;
       return user;
     },
 

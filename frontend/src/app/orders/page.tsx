@@ -1,73 +1,158 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useQuery, useMutation } from "@apollo/client/react";
-import { ORDERS, UPDATE_ORDER } from "@/graphql/queries";
+
+import {
+    Box,
+    Typography,
+    Button,
+    ButtonGroup,
+    Paper,
+    Table,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
+    CircularProgress,
+    Chip,
+    Stack,
+} from "@mui/material";
+import { useOrders } from "./useOrders";
+
 
 export default function Orders() {
-    const [status, setStatus] = useState<string | undefined>(undefined);
-    const { data, loading, error, fetchMore, refetch } = useQuery(ORDERS, { variables: { first: 15, after: null, status } });
-    const [updateOrder] = useMutation(UPDATE_ORDER);
+    const { data,
+        loading,
+        error,
+        status,
+        changeStatus,
+        handleUpdate,
+        fetchMore,
+        STATUSES,
+        STATUS_COLORS,
+        ACTIONS,
+        TABLE_HEADERS, } = useOrders();
 
-    // Poll every 5s to simulate real-time (replace with WebSocket subscription in prod)
-    useEffect(() => {
-        const id = setInterval(() => refetch({ first: 15, after: null, status }), 5000);
-        return () => clearInterval(id);
-    }, [refetch, status]);
+    if (loading)
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+                <CircularProgress size={50} sx={{ color: "#6495ED" }} />
+            </Box>
+        );
 
-    if (loading) return <div>Loading…</div>;
-    if (error) return <pre className="text-red-600">{String(error)}</pre>;
+    if (error) return <Typography color="error">{String(error)}</Typography>;
+    if (!data) return null;
 
     const edges = data.orders.edges;
 
     return (
-        <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Order Tracking</h1>
-                <div className="space-x-2">
-                    {["ALL", "PENDING", "SHIPPED", "DELIVERED", "CANCELLED"].map(s => (
-                        <button key={s}
-                            className={`px-3 py-1 rounded-md border ${status === (s === "ALL" ? undefined : s) ? "bg-blue-600 text-white" : ""}`}
-                            onClick={() => setStatus(s === "ALL" ? undefined : s)}>
-                            {s}
-                        </button>
-                    ))}
-                </div>
-            </div>
+        <Box width="100%" p={{ xs: 2, md: 4 }}>
+            <Typography variant="h4" fontWeight={500} gutterBottom color="textSecondary">
+                Order Tracking
+            </Typography>
 
-            <div className="rounded-2xl bg-white p-5 shadow overflow-x-auto">
-                <table className="min-w-full text-sm">
-                    <thead>
-                        <tr className="text-left text-slate-500"><th className="py-2">Order</th><th>Total</th><th>Status</th><th>Customer</th><th>Created</th><th>Actions</th></tr>
-                    </thead>
-                    <tbody>
-                        {edges.map((e: any) => (
-                            <tr key={e.node.id} className="border-t">
-                                <td className="py-2">{e.node.id}</td>
-                                <td className="py-2">${e.node.total.toFixed(2)}</td>
-                                <td className="py-2">{e.node.status}</td>
-                                <td className="py-2">{e.node.customer}</td>
-                                <td className="py-2">{new Date(e.node.createdAt).toLocaleString()}</td>
-                                <td className="py-2 space-x-2">
-                                    {["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"].map(st => (
-                                        <button key={st} className="px-2 py-1 rounded-md border"
-                                            onClick={() => updateOrder({ variables: { id: e.node.id, status: st } }).then(() => refetch({ first: 15, status }))}>
-                                            {st}
-                                        </button>
-                                    ))}
-                                </td>
-                            </tr>
+            {/* Status Filters */}
+            <ButtonGroup sx={{ mb: 3, borderRadius: 2 }}>
+                {STATUSES.map((s) => (
+                    <Button
+                        key={s}
+                        onClick={() => changeStatus(s)}
+                        variant={status === (s === "ALL" ? undefined : s) ? "contained" : "outlined"}
+                        sx={{
+                            textTransform: "capitalize",
+                            color: status === (s === "ALL" ? undefined : s) ? "#fff" : "#6495ED",
+                            backgroundColor: status === (s === "ALL" ? undefined : s) ? "#6495ED" : "transparent",
+                            borderColor: "#6495ED",
+                            "&:hover": {
+                                backgroundColor: "#4169E1",
+                                color: "#fff",
+                                borderColor: "#4169E1",
+                            },
+                        }}
+                    >
+                        {s}
+                    </Button>
+                ))}
+            </ButtonGroup>
+
+            <Paper
+                sx={{
+                    overflowX: "auto",
+                    backdropFilter: "blur(12px)",
+                    background: "rgba(100,149,237,0.08)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+                }}
+            >
+                <Table sx={{ minWidth: 1000 }} size="small">
+                    <TableHead sx={{ bgcolor: "#6495ED22" }}>
+                        <TableRow>
+                            {TABLE_HEADERS.map((h) => (
+                                <TableCell key={h.key} sx={{ fontWeight: 600, color: "#4169E1" }}>
+                                    {h.label}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {edges.map((e) => (
+                            <TableRow
+                                key={e.node.id}
+                                hover
+                                sx={{
+                                    "&:hover": { backgroundColor: "rgba(100,149,237,0.15)" },
+                                }}
+                            >
+                                <TableCell>{e.node.id}</TableCell>
+                                <TableCell>${e.node.total.toFixed(2)}</TableCell>
+                                <TableCell>
+                                    <Chip
+                                        label={e.node.status.replace("_", " ")}
+                                        sx={{
+                                            backgroundColor: STATUS_COLORS[e.node.status] || "#6495ED44",
+                                            color: "#fff",
+                                            fontWeight: 600,
+                                            textTransform: "capitalize",
+                                        }}
+                                        size="small"
+                                    />
+                                </TableCell>
+                                <TableCell>{e.node.customer}</TableCell>
+                                <TableCell>{new Date(e.node.createdAt).toLocaleString()}</TableCell>
+                                <TableCell>
+                                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                                        {ACTIONS.map((st) => (
+                                            <Button
+                                                key={st}
+                                                variant="outlined"
+                                                size="small"
+                                                sx={{
+                                                    textTransform: "capitalize",
+                                                    borderColor: "#6495ED",
+                                                    color: "#6495ED",
+                                                    minWidth: 80,
+                                                }}
+                                                onClick={() => handleUpdate(e.node.id, st)}
+                                            >
+                                                {st}
+                                            </Button>
+                                        ))}
+                                    </Stack>
+                                </TableCell>
+                            </TableRow>
                         ))}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
+
                 {data.orders.pageInfo.hasNextPage && (
-                    <div className="pt-3">
-                        <button className="px-3 py-1 rounded-md border"
-                            onClick={() => fetchMore({ variables: { after: data.orders.pageInfo.endCursor } })}>
-                            Load more
-                        </button>
-                    </div>
+                    <Box display="flex" justifyContent="flex-end" mt={2}>
+                        <Button
+                            variant="outlined"
+                            sx={{ textTransform: "none", borderColor: "#6495ED", color: "#6495ED" }}
+                            onClick={() => fetchMore({ variables: { after: data.orders.pageInfo.endCursor } })}
+                        >
+                            Load More
+                        </Button>
+                    </Box>
                 )}
-            </div>
-        </div>
+            </Paper>
+        </Box>
     );
 }

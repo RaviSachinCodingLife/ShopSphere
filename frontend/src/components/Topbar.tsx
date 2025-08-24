@@ -1,53 +1,130 @@
 "use client";
-import { useAppDispatch } from "@/store";
-import { toggleSidebar } from "@/store/slices/uiSlice";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { useTopbar } from "./useComponents";
 import Link from "next/link";
+import {
+    AppBar,
+    Toolbar,
+    Typography,
+    Menu,
+    MenuItem,
+    Box,
+    Button,
+} from "@mui/material";
+import AccountCircle from "@mui/icons-material/AccountCircle";
+import Settings from "@mui/icons-material/Settings";
+import Logout from "@mui/icons-material/Logout";
 
 export default function Topbar() {
-    const dispatch = useAppDispatch();
-    const router = useRouter();
-    const [username, setUsername] = useState<string | null>(null);
+    const { user, logout } = useTopbar();
 
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
 
-    useEffect(() => {
-        const stored = localStorage.getItem("user");
-        if (stored) {
-            const user = JSON.parse(stored);
-            setUsername(user.username || "Guest");
-        }
-    }, []);
-
-
-    const handleLogout = () => {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        router.push("/");
+    const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
+        setAnchorEl(event.currentTarget);
     };
 
+    const handleClose = () => setAnchorEl(null);
+
     return (
-        <header className="sticky top-0 z-10 bg-white/80 backdrop-blur border-b">
-            <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-                <button
-                    onClick={() => dispatch(toggleSidebar())}
-                    className="md:hidden rounded-xl border px-3 py-2"
+        <AppBar
+            position="sticky"
+            elevation={0}
+            sx={{
+                backdropFilter: "blur(12px)",
+                background: "rgba(255, 255, 255, 0.8)",
+                color: "black",
+                borderBottom: "2px solid rgba(100, 149, 237, 0.5)",
+                boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+            }}
+        >
+            <Toolbar sx={{ display: "flex", justifyContent: "space-between" }}>
+                <Typography
+                    variant="h6"
+                    fontWeight={700}
+                    sx={{
+                        color: "cornflowerblue",
+                        cursor: "pointer",
+                        letterSpacing: "0.5px",
+                    }}
+                    component={Link}
+                    href="/"
                 >
-                    Menu
-                </button>
-                <div className="font-medium">E-Commerce Analytics</div>
-                <div style={{ marginLeft: "auto" }}>
-                    {username ? (
-                        <>
-                            <span style={{ marginRight: "15px" }}>Hi, {username}</span>
-                            <button onClick={handleLogout}>Logout</button>
-                        </>
-                    ) : (
-                        <Link href="/auth/login">Login</Link>
-                    )}
-                </div>
-                <Link href="/settings">⚙️ Settings</Link>
-            </div>
-        </header>
+                    E-Commerce Analytics
+                </Typography>
+
+                {user ? (
+                    <Box>
+                        <Button
+                            onClick={handleMenu}
+                            startIcon={<AccountCircle />}
+                            sx={{
+                                textTransform: "capitalize",
+                                fontWeight: 600,
+                                color: "cornflowerblue",
+                                "&:hover": { bgcolor: "rgba(100,149,237,0.1)" },
+                            }}
+                        >
+                            Hi, {user.username}
+                        </Button>
+                        <Menu
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleClose}
+                            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                            transformOrigin={{ vertical: "top", horizontal: "right" }}
+                        >
+                            <MenuItem component={Link} href="/settings" onClick={handleClose}>
+                                <Settings fontSize="small" sx={{ color: "cornflowerblue", mr: 1 }} />{" "}
+                                <span
+                                    style={{
+                                        fontWeight: 500,
+                                        fontSize: "0.95rem",
+                                        color: "text.primary",
+                                    }}
+                                >
+                                    Settings
+                                </span>
+                            </MenuItem>
+                            <MenuItem
+                                onClick={() => {
+                                    handleClose();
+                                    logout();
+                                }}
+                            >
+                                <Logout fontSize="small" sx={{ color: "cornflowerblue", mr: 1 }} />
+                                <span
+                                    style={{
+                                        fontWeight: 500,
+                                        fontSize: "0.95rem",
+                                        color: "text.primary",
+                                    }}
+                                >
+                                    Logout
+                                </span>
+                            </MenuItem>
+                        </Menu>
+                    </Box>
+                ) : (
+                    <Button
+                        variant="outlined"
+                        sx={{
+                            borderColor: "cornflowerblue",
+                            color: "cornflowerblue",
+                            fontWeight: 600,
+                            "&:hover": {
+                                borderColor: "blue",
+                                backgroundColor: "rgba(100,149,237,0.08)",
+                            },
+                        }}
+                        component={Link}
+                        href="/auth/login"
+                    >
+                        Login
+                    </Button>
+                )}
+            </Toolbar>
+        </AppBar>
     );
 }

@@ -1,60 +1,161 @@
 "use client";
-import { useQuery } from "@apollo/client/react";
-import { INVENTORY } from "@/graphql/queries";
-import { useState } from "react";
+
+import {
+    CircularProgress,
+    Box,
+    Table,
+    Typography,
+    ButtonGroup,
+    Button,
+    Paper,
+    TableHead,
+    TableRow,
+    TableCell,
+    TableBody,
+    Chip,
+    Pagination,
+} from "@mui/material";
+import { useInventory } from "./useInventory";
 
 export default function Inventory() {
-    const [page, setPage] = useState(1);
-    const [status, setStatus] = useState<string | null>(null);
     const pageSize = 12;
-    const { data, loading, error, refetch } = useQuery(INVENTORY, { variables: { page, pageSize, status } });
+    const {
+        data,
+        loading,
+        error,
+        filters,
+        setPage,
+        setStatus,
+        STATUS_COLORS,
+        TABLE_HEADERS,
+        STATUSES,
+    } = useInventory(pageSize);
 
-    if (loading) return <div>Loading…</div>;
-    if (error) return <pre className="text-red-600">{String(error)}</pre>;
+    if (loading)
+        return (
+            <Box
+                display="flex"
+                justifyContent="center"
+                alignItems="center"
+                minHeight="60vh"
+            >
+                <CircularProgress size={50} sx={{ color: "#6495ED" }} />
+            </Box>
+        );
+    if (error) return <Typography color="error">{String(error)}</Typography>;
+    if (!data) return null;
 
     const inv = data.inventory;
     const totalPages = Math.ceil(inv.total / inv.pageSize);
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-semibold">Inventory</h1>
-            <div className="flex gap-2">
-                {["ALL", "IN_STOCK", "LOW", "OUT_OF_STOCK"].map(s => (
-                    <button key={s}
-                        className={`px-3 py-1 rounded-md border ${status === (s === "ALL" ? null : s) ? "bg-blue-600 text-white" : ""}`}
-                        onClick={() => { const st = s === "ALL" ? null : s; setStatus(st); setPage(1); refetch({ page: 1, pageSize, status: st }); }}>
-                        {s.replace("_", " ")}
-                    </button>
-                ))}
-            </div>
+        <Box width="100%" p={{ xs: 2, md: 4 }}>
+            <Typography
+                variant="h4"
+                fontWeight={500}
+                color="textSecondary"
+                gutterBottom
+            >
+                Inventory
+            </Typography>
 
-            <div className="rounded-2xl bg-white p-5 shadow overflow-x-auto">
-                <table className="min-w-full text-sm">
-                    <thead>
-                        <tr className="text-left text-slate-500">
-                            <th className="py-2">SKU</th><th className="py-2">Name</th><th className="py-2">Stock</th><th className="py-2">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {inv.items.map((it: any) => (
-                            <tr key={it.id} className="border-t">
-                                <td className="py-2">{it.sku}</td>
-                                <td className="py-2">{it.name}</td>
-                                <td className="py-2">{it.stock}</td>
-                                <td className="py-2">{it.status}</td>
-                            </tr>
+            <ButtonGroup sx={{ mb: 3, borderRadius: 2 }} variant="outlined">
+                {STATUSES.map((s) => {
+                    const currentStatus = s === "ALL" ? null : s;
+                    return (
+                        <Button
+                            key={s}
+                            variant={
+                                filters.status === currentStatus ? "contained" : "outlined"
+                            }
+                            onClick={() => setStatus(currentStatus)}
+                            sx={{
+                                textTransform: "capitalize",
+                                color: filters.status === currentStatus ? "#fff" : "#6495ED",
+                                backgroundColor:
+                                    filters.status === currentStatus ? "#6495ED" : "transparent",
+                                borderColor: "#6495ED",
+                                "&:hover": {
+                                    backgroundColor: "#4169E1",
+                                    color: "#fff",
+                                    borderColor: "#4169E1",
+                                },
+                            }}
+                        >
+                            {s.replace("_", " ")}
+                        </Button>
+                    );
+                })}
+            </ButtonGroup>
+
+            <Paper
+                sx={{
+                    p: 2,
+                    borderRadius: 3,
+                    mb: 3,
+                    overflowX: "auto",
+                    backdropFilter: "blur(12px)",
+                    background: "rgba(100,149,237,0.08)",
+                    boxShadow: "0 8px 32px rgba(0,0,0,0.08)",
+                }}
+            >
+                <Table sx={{ minWidth: 1000 }} size="small">
+                    <TableHead sx={{ bgcolor: "#6495ED22" }}>
+                        <TableRow>
+                            {TABLE_HEADERS.map((header) => (
+                                <TableCell
+                                    key={header}
+                                    sx={{ fontWeight: 600, color: "#4169E1" }}
+                                >
+                                    {header}
+                                </TableCell>
+                            ))}
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {inv.items.map((it) => (
+                            <TableRow
+                                key={it.id}
+                                hover
+                                sx={{
+                                    "&:hover": {
+                                        backgroundColor: "rgba(100,149,237,0.15)",
+                                    },
+                                }}
+                            >
+                                <TableCell>{it.sku}</TableCell>
+                                <TableCell>{it.name}</TableCell>
+                                <TableCell>{it.stock}</TableCell>
+                                <TableCell>
+                                    <Chip
+                                        label={it.status.replace("_", " ")}
+                                        sx={{
+                                            backgroundColor: STATUS_COLORS[it.status] || "#6495ED44",
+                                            color: "#fff",
+                                            fontWeight: 600,
+                                            textTransform: "capitalize",
+                                        }}
+                                        size="small"
+                                    />
+                                </TableCell>
+                            </TableRow>
                         ))}
-                    </tbody>
-                </table>
-            </div>
+                    </TableBody>
+                </Table>
+            </Paper>
 
-            <div className="flex items-center gap-2">
-                <button disabled={page <= 1} className="px-3 py-1 rounded-md border disabled:opacity-50"
-                    onClick={() => { setPage(page - 1); refetch({ page: page - 1, pageSize, status }); }}>Prev</button>
-                <div className="text-sm text-slate-600">Page {page} / {totalPages}</div>
-                <button disabled={page >= totalPages} className="px-3 py-1 rounded-md border disabled:opacity-50"
-                    onClick={() => { setPage(page + 1); refetch({ page: page + 1, pageSize, status }); }}>Next</button>
-            </div>
-        </div>
+            <Box display="flex" justifyContent="flex-end">
+                <Pagination
+                    count={totalPages}
+                    page={filters.page}
+                    color="primary"
+                    onChange={(_, value) => setPage(value)}
+                    sx={{
+                        "& .MuiPaginationItem-root": { color: "#4169E1" },
+                        "& .Mui-selected": { backgroundColor: "#6495ED" },
+                    }}
+                />
+            </Box>
+        </Box>
     );
 }
