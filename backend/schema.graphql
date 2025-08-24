@@ -98,6 +98,34 @@ type OrdersConnection {
   pageInfo: PageInfo!
 }
 
+"""
+Products & Admin / Users
+"""
+type Product {
+  id: ID!
+  name: String!
+  sku: String!
+  stock: Int!
+  price: Float!
+}
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  role: String!
+}
+
+enum Role {
+  ANALYTICS
+  ADMIN
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+# --- SINGLE consolidated Query and Mutation ---
 type Query {
   hello: String!
 
@@ -112,7 +140,7 @@ type Query {
     region: String
   ): SalesAnalytics!
 
-  # Inventory
+  # Inventory (use InventoryPage consistently)
   inventory(
     page: Int! = 1
     pageSize: Int! = 20
@@ -122,18 +150,28 @@ type Query {
   # Users
   userBehavior(range: String! = "last_30"): UserBehavior!
 
-  # Orders
+  # Orders (use OrdersConnection consistently)
   orders(
     first: Int! = 20
     after: String
     status: OrderStatus
   ): OrdersConnection!
   order(id: ID!): Order
+
+  # Auth / user
+  me: User
 }
 
 type Mutation {
   updateOrderStatus(id: ID!, status: OrderStatus!): Order!
   updatePreference(theme: String!, notifications: Boolean!): Boolean!
+
+  # Auth/Admin operations
+  register(username: String!, email: String!, password: String!): AuthPayload!
+  login(email: String!, password: String!): AuthPayload!
+  upgradeRole(userId: ID!, role: Role!): User! # for settings feature
+  deleteProduct(id: ID!): Boolean!
+  updateProductStock(id: ID!, stock: Int!): Product!
 }
 
 type Subscription {

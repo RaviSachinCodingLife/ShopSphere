@@ -7,11 +7,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 import { resolvers } from "./resolvers.js";
+import jwt from "jsonwebtoken";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const typeDefs = readFileSync(join(__dirname, "schema.graphql"), "utf8");
+const JWT_SECRET = "supersecretkey";
 
 const server = new ApolloServer({
   typeDefs,
@@ -21,5 +23,21 @@ const server = new ApolloServer({
 
 export const graphql = startServerAndCreateLambdaHandler(
   server,
-  handlers.createAPIGatewayProxyEventRequestHandler()
+  handlers.createAPIGatewayProxyEventRequestHandler(),
+  {
+    context: async ({ event }) => {
+      const auth = event.headers.authorization || "";
+      if (auth.startsWith("Bearer ")) {
+        try {
+          const token = auth.replace("Bearer ", "");
+          const decoded = jwt.verify(token, JWT_SECRET);
+          const user = users.find((u) => u.id === decoded.userId);
+          return { user };
+        } catch (e) {
+          return {};
+        }
+      }
+      return {};
+    },
+  }
 );

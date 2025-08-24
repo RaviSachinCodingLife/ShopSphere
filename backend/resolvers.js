@@ -1,3 +1,6 @@
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+
 const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
 const customers = [
   "Ava",
@@ -12,6 +15,8 @@ const customers = [
   "Kai",
 ];
 const statuses = ["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"];
+
+const users = [];
 
 function seedOrders(n = 200) {
   return Array.from({ length: n }).map((_, i) => ({
@@ -42,7 +47,6 @@ function stockStatus(stock) {
 export const resolvers = {
   Query: {
     hello: () => "🚀 Hello from ShopSphere GraphQL Backend!",
-
     dashboardKPIs: () => ({
       totalSales: ORDERS.reduce((s, o) => s + o.total, 0),
       ordersInProgress: ORDERS.filter(
@@ -119,16 +123,110 @@ export const resolvers = {
     },
 
     order: (_, { id }) => ORDERS.find((o) => o.id === id) || null,
+
+    me: (_, __, { user }) => {
+      if (!user) throw new Error("Not authenticated");
+      return user;
+    },
   },
 
   Mutation: {
-    updateOrderStatus: (_, { id, status }) => {
+    updateOrderStatus: (_, { id, status }, { user }) => {
+      if (!user || (user.role !== "ADMIN" && user.role !== "ANALYTICS"))
+        throw new Error("Unauthorized");
       const o = ORDERS.find((x) => x.id === id);
       if (!o) throw new Error("Order not found");
       o.status = status;
       return o;
     },
+
     updatePreference: () => true,
+
+    // ✅ Register new user
+    register: async (_, { username, email, password }) => {
+      const existingUser = users.find((u) => u.email === email);
+      if (existingUser) {
+        throw new Error("User already exists");
+      }
+      const hashed = await bcrypt.hash(password, 10);
+      const newUser = {
+        id: String(users.length + 1),
+        username,
+        email,
+        password: hashed,
+        role: "analytics", // ✅ default role
+      };
+      users.push(newUser);
+
+      const token = jwt.sign(
+        { userId: newUser.id, role: newUser.role },
+        "MY_SECRET",
+        { expiresIn: "7d" }
+      );
+
+      return {
+        token,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          email: newUser.email,
+          role: newUser.role,
+        },
+      };
+    },
+
+    // ✅ Login
+    login: async (_, { email, password }) => {
+      const user = users.find((u) => u.email === email);
+      if (!user) throw new Error("User not found");
+
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) throw new Error("Invalid password");
+
+      const token = jwt.sign(
+        { userId: user.id, role: user.role },
+        "MY_SECRET",
+        { expiresIn: "7d" }
+      );
+
+      return {
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          role: user.role,
+        },
+      };
+    },
+
+    // ✅ Upgrade role
+     upgradeRole: (_, { userId, role }) => {
+      const user = users.find(u => u.id === userId);
+      if (!user) throw new Error("User not found");
+
+      user.role = role; 
+      return user;
+    },
+
+    // ✅ Analytics/Admin features
+    deleteProduct: (_, { id }, { user }) => {
+      if (!user || (user.role !== "ADMIN" && user.role !== "ANALYTICS"))
+        throw new Error("Unauthorized");
+      const index = PRODUCTS.findIndex((p) => p.id === id);
+      if (index === -1) throw new Error("Product not found");
+      PRODUCTS.splice(index, 1);
+      return true;
+    },
+
+    updateProductStock: (_, { id, stock }, { user }) => {
+      if (!user || (user.role !== "ADMIN" && user.role !== "ANALYTICS"))
+        throw new Error("Unauthorized");
+      const product = PRODUCTS.find((p) => p.id === id);
+      if (!product) throw new Error("Product not found");
+      product.stock = stock;
+      return { ...product, status: stockStatus(stock) };
+    },
   },
 
   Subscription: {
