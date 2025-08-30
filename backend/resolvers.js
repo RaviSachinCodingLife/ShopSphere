@@ -16,7 +16,7 @@ const customers = [
 ];
 const statuses = ["PENDING", "SHIPPED", "DELIVERED", "CANCELLED"];
 
-const users = [];
+export const users = [];
 
 function seedOrders(n = 200) {
   return Array.from({ length: n }).map((_, i) => ({

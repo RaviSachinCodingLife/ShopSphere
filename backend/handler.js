@@ -13,7 +13,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const typeDefs = readFileSync(join(__dirname, "schema.graphql"), "utf8");
-const JWT_SECRET = "supersecretkey";
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretkey";
 
 const server = new ApolloServer({
   typeDefs,

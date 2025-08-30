@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "api/graphql.js",
+  "main": "index.js",
   "scripts": {
-    "start": "node api/graphql.js",
-    "dev": "vercel dev"
+    "dev": "node index.js",
+    "start": "node index.js"
   },
   "keywords": [],
   "author": "",
