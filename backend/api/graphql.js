@@ -1,14 +1,17 @@
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
 import { resolvers } from "../resolvers.js";
+import { gql } from "graphql-tag";
+import schemaString from "../schema.graphql?raw"; // <- Vercel-friendly
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const typeDefs = readFileSync(join(__dirname, "../schema.graphql"), "utf8");
+const typeDefs = gql`
+  ${schemaString}
+`;
 
-const server = new ApolloServer({ typeDefs, resolvers, introspection: true });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  introspection: true,
+});
 
 export default startServerAndCreateNextHandler(server);
