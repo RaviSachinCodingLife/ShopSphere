@@ -8,6 +8,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolvers } from "../resolvers.js";
 import jwt from "jsonwebtoken";
+import { startServerAndCreateNextHandler } from "@as-integrations/next";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -21,27 +22,30 @@ const server = new ApolloServer({
   introspection: true,
 });
 
-export default async function handler(req, res) {
-  const lambdaHandler = startServerAndCreateLambdaHandler(
-    server,
-    handlers.createAPIGatewayProxyEventRequestHandler(),
-    {
-      context: async ({ event }) => {
-        const auth = event.headers.authorization || "";
-        if (auth.startsWith("Bearer ")) {
-          try {
-            const token = auth.replace("Bearer ", "");
-            const decoded = jwt.verify(token, JWT_SECRET);
-            const user = users.find((u) => u.id === decoded.userId);
-            return { user };
-          } catch (e) {
-            return {};
-          }
-        }
-        return {};
-      },
-    }
-  );
+// export default async function handler(req, res) {
+//   const lambdaHandler = startServerAndCreateLambdaHandler(
+//     server,
+//     handlers.createAPIGatewayProxyEventRequestHandler(),
+//     {
+//       context: async ({ event }) => {
+//         const auth = event.headers.authorization || "";
+//         if (auth.startsWith("Bearer ")) {
+//           try {
+//             const token = auth.replace("Bearer ", "");
+//             const decoded = jwt.verify(token, JWT_SECRET);
+//             const user = users.find((u) => u.id === decoded.userId);
+//             return { user };
+//           } catch (e) {
+//             return {};
+//           }
+//         }
+//         return {};
+//       },
+//     }
+//   );
 
-  await lambdaHandler(req, res);
-}
+//   await lambdaHandler(req, res);
+// }
+
+export default startServerAndCreateNextHandler(server);
+startServerAndCreateNextHandler(server);
