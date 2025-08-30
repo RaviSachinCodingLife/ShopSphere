@@ -33,7 +33,6 @@ const server = new ApolloServer({
 
 await server.start();
 
-// Auth middleware
 app.use(
   "/graphql",
   cors(),
@@ -58,7 +57,11 @@ app.use(
   })
 );
 
-// Start server
+
+app.get("/", (req, res) => {
+  res.send("🚀 ShopSphere GraphQL API is running! Use /graphql");
+});
+
 const PORT = process.env.PORT || 4000;
 httpServer.listen(PORT, () => {
   console.log(`🚀 Server ready at http://localhost:${PORT}/graphql`);
