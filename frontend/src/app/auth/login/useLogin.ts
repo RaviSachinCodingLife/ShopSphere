@@ -33,10 +33,11 @@ export function useLogin() {
     }
   };
 
-  const inputs = [
-    { label: "Email", name: "email", type: "email" },
-    { label: "Password", name: "password", type: "password" },
-  ];
+  const inputs: { label: string; name: keyof LoginVariables; type: string }[] =
+    [
+      { label: "Email", name: "email", type: "email" },
+      { label: "Password", name: "password", type: "password" },
+    ];
 
   return {
     form,

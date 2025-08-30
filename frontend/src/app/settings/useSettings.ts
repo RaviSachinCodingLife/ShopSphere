@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/client/react";
 import { gql } from "@apollo/client";
 import { User, UpgradeRoleResponse, UpgradeRoleVars } from "./types";
@@ -22,9 +22,14 @@ export function useSettings() {
     UpgradeRoleVars
   >(UPGRADE_ROLE);
 
-  const [user, setUser] = useState<User | null>(() =>
-    JSON.parse(localStorage.getItem("user") || "null")
-  );
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("user");
+    if (stored) {
+      setUser(JSON.parse(stored));
+    }
+  }, []);
 
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -45,8 +50,12 @@ export function useSettings() {
         localStorage.setItem("user", JSON.stringify(data.upgradeRole));
         setSuccessMessage("🎉 Successfully upgraded to Admin!");
       }
-    } catch (err: any) {
-      setErrorMessage(err.message || "❌ Failed to upgrade role");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMessage(err.message);
+      } else {
+        setErrorMessage("❌ Failed to upgrade role");
+      }
     }
   };
 

@@ -42,9 +42,12 @@ app.use(
       const auth = req.headers.authorization || "";
       if (auth.startsWith("Bearer ")) {
         try {
-          const token = auth.replace("Bearer ", "");
+          const token = jwt.sign(
+            { userId: newUser.id, role: newUser.role },
+            JWT_SECRET,
+            { expiresIn: "7d" }
+          );
           const decoded = jwt.verify(token, JWT_SECRET);
-          // You have a `users` array in resolvers.js
           const { users } = await import("./resolvers.js");
           const user = users.find((u) => u.id === decoded.userId);
           return { user };
@@ -56,7 +59,6 @@ app.use(
     },
   })
 );
-
 
 app.get("/", (req, res) => {
   res.send("🚀 ShopSphere GraphQL API is running! Use /graphql");
