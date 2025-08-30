@@ -6,7 +6,7 @@ import {
 import { readFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { resolvers } from "../resolvers.js"; 
+import { resolvers } from "../resolvers.js";
 import jwt from "jsonwebtoken";
 
 const __filename = fileURLToPath(import.meta.url);
