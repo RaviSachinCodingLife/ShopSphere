@@ -5,7 +5,8 @@
   "type": "module",
   "main": "api/graphql.js",
   "scripts": {
-    "start": "node api/graphql.js"
+    "start": "node api/graphql.js",
+    "dev": "vercel dev"
   },
   "keywords": [],
   "author": "",
