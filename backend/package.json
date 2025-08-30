@@ -3,10 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "main": "handler.js",
+  "main": "api/graphql.js",
   "scripts": {
-    "build": "tsc",
-    "start": "node handler.js"
+    "start": "node api/graphql.js"
   },
   "keywords": [],
   "author": "",
